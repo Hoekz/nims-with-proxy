@@ -1,0 +1,43 @@
+services:
+  embeddings:
+    hostname: embeddings
+    image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.1.0
+    runtime: nvidia
+    shm_size: 16gb
+    user: "${UID:-0}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    env_file: "embeddings.env"
+    ports:
+      - "8001:8000"
+    volumes:
+      - ${HOME}/.cache/nim:/opt/nim/.cache
+  reranker:
+    hostname: reranker
+    image: nvcr.io/nim/nvidia/nv-rerankqa-mistral-4b-v3:1.0.2
+    runtime: nvidia
+    shm_size: 16gb
+    user: "${UID:-0}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    env_file: "reranker.env"
+    ports:
+      - "8002:8000"
+    volumes:
+      - ${HOME}/.cache/nim:/opt/nim/.cache
+  nginx:
+    image: nginx
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
